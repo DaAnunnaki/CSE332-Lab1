@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fused Data Explorer</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: linear-gradient(180deg, #f4efe6 0%, #fbf8f2 42%, #fffdf8 100%);
+            --panel: rgba(255, 252, 246, 0.9);
+            --border: rgba(114, 92, 59, 0.18);
+            --text: #2f2618;
+            --muted: #75644c;
+            --accent: #0f766e;
+            --accent-soft: rgba(15, 118, 110, 0.12);
+            --grid: rgba(117, 100, 76, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Georgia, "Times New Roman", serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        main {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 40px 0 48px;
+        }
+
+        .hero {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .eyebrow {
+            margin: 0;
+            font-size: 0.85rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.2rem, 5vw, 4.5rem);
+            line-height: 0.95;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            margin: 0;
+            max-width: 62ch;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: var(--muted);
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 22px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 24px 80px rgba(66, 46, 14, 0.08);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .control {
+            display: grid;
+            gap: 8px;
+            min-width: min(100%, 280px);
+        }
+
+        fieldset.control-group {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            min-width: min(100%, 280px);
+        }
+
+        .radio-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .radio-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.98rem;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 400;
+            color: var(--text);
+        }
+
+        .radio-option input {
+            margin: 0;
+            accent-color: var(--accent);
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        select {
+            appearance: none;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: #fffefb;
+            color: var(--text);
+            font: inherit;
+        }
+
+        .chart-meta {
+            margin: 0 0 16px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        #chart {
+            width: 100%;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .axis text,
+        .axis-label,
+        .tooltip {
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .axis path,
+        .axis line {
+            stroke: rgba(47, 38, 24, 0.28);
+        }
+
+        .grid line {
+            stroke: var(--grid);
+            stroke-dasharray: 3 4;
+        }
+
+        .grid path {
+            display: none;
+        }
+
+        .axis-label {
+            fill: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .series-line {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 3;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .series-dot {
+            fill: #fffdf8;
+            stroke: var(--accent);
+            stroke-width: 2;
+        }
+
+        .tooltip {
+            position: fixed;
+            pointer-events: none;
+            opacity: 0;
+            background: rgba(47, 38, 24, 0.92);
+            color: #fffdf8;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            line-height: 1.4;
+            transform: translate(12px, 12px);
+            transition: opacity 140ms ease;
+        }
+
+        .status {
+            margin-top: 14px;
+            color: var(--muted);
+        }
+
+        .viz-section+.viz-section {
+            margin-top: 30px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .viz-title {
+            margin: 0 0 8px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 720px) {
+            main {
+                width: min(100% - 20px, 1120px);
+                padding-top: 24px;
+            }
+
+            .panel {
+                padding: 16px;
+                border-radius: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <section class="hero">
+            <p class="eyebrow">332 Lab 1</p>
+            <h1>Topic: Fused Dataset Visualization</h1>
+            <p class="subtitle">
+                The topic: whey protein sales vs the trend of protein and ways of losing weight.
+            </p>
+            <p class="subtitle">
+                Select any variable from the fused dataset. Categorical variables render as bar charts,
+                and numeric variables render as date-based histograms.
+            </p>
+        </section>
+
+        <section class="panel">
+            <section class="viz-section">
+                <div class="controls">
+                    <div class="control">
+                        <label for="variable-select">Variable</label>
+                        <select id="variable-select"></select>
+                    </div>
+                    <fieldset class="control-group">
+                        <legend>Chart orientation</legend>
+                        <div class="radio-row">
+                            <label class="radio-option" for="orientation-upright">
+                                <input id="orientation-upright" type="radio" name="chart-orientation" value="upright"
+                                    checked />
+                                Upright
+                            </label>
+                            <label class="radio-option" for="orientation-sideways">
+                                <input id="orientation-sideways" type="radio" name="chart-orientation"
+                                    value="sideways" />
+                                Sideway
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
+                <p class="chart-meta" id="chart-meta"></p>
+                <div id="chart"></div>
+                <p class="status" id="status">Loading data...</p>
+            </section>
+
+            <section class="viz-section">
+                <h2 class="viz-title">Scatterplot</h2>
+                <div class="controls">
+                    <fieldset class="control-group">
+                        <legend>Menu variable axis</legend>
+                        <div class="radio-row">
+                            <label class="radio-option" for="scatter-axis-x">
+                                <input id="scatter-axis-x" type="radio" name="scatter-axis-assignment" value="x"
+                                    checked />
+                                Use menu variable on X
+                            </label>
+                            <label class="radio-option" for="scatter-axis-y">
+                                <input id="scatter-axis-y" type="radio" name="scatter-axis-assignment" value="y" />
+                                Use menu variable on Y
+                            </label>
+                        </div>
+                    </fieldset>
+                    <div class="control">
+                        <label for="scatter-variable-select">Second numeric variable</label>
+                        <select id="scatter-variable-select"></select>
+                    </div>
+                </div>
+                <p class="chart-meta" id="scatter-meta"></p>
+                <div id="scatterplot"></div>
+                <p class="status" id="scatter-status">Loading scatterplot...</p>
+            </section>
+        </section>
+    </main>
+
+    <div class="tooltip" id="tooltip"></div>
+    <script type="module" src="./index.js"></script>
+</body>
+
+</html>
