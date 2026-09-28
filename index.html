@@ -4,18 +4,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fused Data Explorer</title>
+    <title>Signal Atlas | PCA and k-means</title>
     <style>
         :root {
             color-scheme: light;
-            --bg: linear-gradient(180deg, #f4efe6 0%, #fbf8f2 42%, #fffdf8 100%);
-            --panel: rgba(255, 252, 246, 0.9);
-            --border: rgba(114, 92, 59, 0.18);
-            --text: #2f2618;
-            --muted: #75644c;
-            --accent: #0f766e;
-            --accent-soft: rgba(15, 118, 110, 0.12);
-            --grid: rgba(117, 100, 76, 0.2);
+            --paper: #f5f5ef;
+            --surface: #fffefa;
+            --ink: #202d2b;
+            --muted: #65716b;
+            --line: #d9dfd8;
+            --green: #167b68;
+            --green-soft: #e2f0e9;
+            --orange: #bc5b32;
+            --grid: #e6e9e3;
+            --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+            --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
         }
 
         * {
@@ -24,211 +27,342 @@
 
         body {
             margin: 0;
-            min-height: 100vh;
-            font-family: Georgia, "Times New Roman", serif;
-            background: var(--bg);
-            color: var(--text);
+            background:
+                radial-gradient(ellipse at 8% 0%, rgba(188, 91, 50, 0.08), transparent 30rem),
+                repeating-linear-gradient(0deg, transparent 0 31px, rgba(32, 45, 43, 0.025) 31px 32px),
+                var(--paper);
+            color: var(--ink);
+            font-family: var(--sans);
         }
 
         main {
-            width: min(1120px, calc(100% - 32px));
+            width: min(1440px, calc(100% - 40px));
             margin: 0 auto;
-            padding: 40px 0 48px;
+            padding: 30px 0 56px;
         }
 
-        .hero {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 28px;
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 24px;
+            padding: 10px 0 24px;
+            border-bottom: 1px solid var(--line);
         }
 
         .eyebrow {
-            margin: 0;
-            font-size: 0.85rem;
-            letter-spacing: 0.12em;
+            margin: 0 0 8px;
+            color: var(--green);
+            font-size: 0.76rem;
+            font-weight: 700;
             text-transform: uppercase;
-            color: var(--muted);
         }
 
         h1 {
             margin: 0;
-            font-size: clamp(2.2rem, 5vw, 4.5rem);
-            line-height: 0.95;
-            font-weight: 600;
+            font: 600 2.8rem/1 var(--serif);
+            letter-spacing: 0;
         }
 
-        .subtitle {
-            margin: 0;
-            max-width: 62ch;
-            font-size: 1.05rem;
-            line-height: 1.6;
+        .dek {
+            max-width: 52ch;
+            margin: 12px 0 0;
             color: var(--muted);
+            font-size: 0.96rem;
+            line-height: 1.5;
         }
 
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 22px;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 24px 80px rgba(66, 46, 14, 0.08);
+        .dataset-note {
+            max-width: 30ch;
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.45;
+            text-align: right;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            margin: 0;
+            font: 600 1.35rem/1.2 var(--serif);
+            letter-spacing: 0;
+        }
+
+        h3 {
+            margin: 0 0 10px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .method,
+        .muted {
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .method {
+            margin: 4px 0 14px;
+        }
+
+        .top-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: minmax(300px, 0.68fr) minmax(0, 1.32fr);
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .chart-section {
+            min-width: 0;
+            padding: 20px 0 22px;
+            border-top: 2px solid var(--ink);
+        }
+
+        .chart-wrap {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            overflow: visible;
         }
 
         .controls {
             display: flex;
             flex-wrap: wrap;
             align-items: end;
-            gap: 16px;
-            margin-bottom: 18px;
+            gap: 12px;
         }
 
         .control {
             display: grid;
-            gap: 8px;
-            min-width: min(100%, 280px);
-        }
-
-        fieldset.control-group {
-            margin: 0;
-            padding: 0;
-            border: 0;
-            min-width: min(100%, 280px);
-        }
-
-        .radio-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 14px;
-        }
-
-        .radio-option {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.98rem;
-            text-transform: none;
-            letter-spacing: 0;
-            font-weight: 400;
-            color: var(--text);
-        }
-
-        .radio-option input {
-            margin: 0;
-            accent-color: var(--accent);
+            gap: 5px;
         }
 
         label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
             color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         select {
-            appearance: none;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 12px 14px;
-            background: #fffefb;
-            color: var(--text);
-            font: inherit;
+            min-width: 138px;
+            max-width: 100%;
+            padding: 8px 30px 8px 10px;
+            border: 1px solid #bbc8c0;
+            border-radius: 3px;
+            background: var(--surface);
+            color: var(--ink);
+            font: 500 0.88rem var(--sans);
         }
 
-        .chart-meta {
-            margin: 0 0 16px;
+        .metric-line {
+            margin: 10px 0 0;
             color: var(--muted);
-            line-height: 1.5;
+            font-size: 0.85rem;
         }
 
-        #chart {
-            width: 100%;
-        }
-
-        svg {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .axis text,
-        .axis-label,
-        .tooltip {
-            font-family: Georgia, "Times New Roman", serif;
+        .metric-line strong {
+            color: var(--ink);
         }
 
         .axis path,
         .axis line {
-            stroke: rgba(47, 38, 24, 0.28);
+            stroke: #89968e;
+        }
+
+        .axis text,
+        .axis-label,
+        .chart-title {
+            fill: var(--muted);
+            font-family: var(--sans);
+            font-size: 11px;
+        }
+
+        .axis-label {
+            font-size: 12px;
         }
 
         .grid line {
             stroke: var(--grid);
-            stroke-dasharray: 3 4;
         }
 
         .grid path {
             display: none;
         }
 
-        .axis-label {
-            fill: var(--muted);
-            font-size: 0.95rem;
+        .bar {
+            cursor: pointer;
+            transition: fill 130ms ease;
         }
 
-        .series-line {
-            fill: none;
-            stroke: var(--accent);
-            stroke-width: 3;
+        .bar:focus {
+            outline: 2px solid var(--ink);
+            outline-offset: 2px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        th,
+        td {
+            padding: 9px 6px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 0.71rem;
+            text-transform: uppercase;
+        }
+
+        td:last-child,
+        th:last-child {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        td input {
+            accent-color: var(--green);
+        }
+
+        .table-note {
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+
+        .matrix-wrap {
+            max-width: 920px;
+            margin: 0 auto;
+        }
+
+        .point {
+            stroke: rgba(255, 255, 255, 0.88);
+            stroke-width: 0.8;
+        }
+
+        .arrow {
+            stroke: var(--orange);
+            stroke-width: 1.7;
+        }
+
+        .arrow-label {
+            fill: #934322;
+            font-size: 11px;
+            font-weight: 700;
+            paint-order: stroke;
+            stroke: var(--surface);
+            stroke-width: 3px;
             stroke-linejoin: round;
-            stroke-linecap: round;
-        }
-
-        .series-dot {
-            fill: #fffdf8;
-            stroke: var(--accent);
-            stroke-width: 2;
         }
 
         .tooltip {
             position: fixed;
+            z-index: 5;
+            max-width: 310px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(27, 43, 39, .96);
+            color: white;
+            font-size: 0.8rem;
+            line-height: 1.5;
             pointer-events: none;
             opacity: 0;
-            background: rgba(47, 38, 24, 0.92);
-            color: #fffdf8;
-            padding: 10px 12px;
-            border-radius: 12px;
-            font-size: 0.92rem;
-            line-height: 1.4;
             transform: translate(12px, 12px);
-            transition: opacity 140ms ease;
         }
 
-        .status {
-            margin-top: 14px;
+        .error {
+            padding: 16px;
+            border-left: 4px solid var(--orange);
+            background: #fff0e9;
+            color: #71371e;
+        }
+
+        footer {
+            padding-top: 22px;
+            margin-top: 28px;
+            border-top: 1px solid var(--line);
             color: var(--muted);
+            font-size: 0.78rem;
         }
 
-        .viz-section+.viz-section {
-            margin-top: 30px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border);
-        }
-
-        .viz-title {
-            margin: 0 0 8px;
-            font-size: 1.2rem;
-        }
-
-        @media (max-width: 720px) {
+        @media (max-width: 820px) {
             main {
-                width: min(100% - 20px, 1120px);
-                padding-top: 24px;
+                width: min(100% - 24px, 680px);
+                padding-top: 20px;
             }
 
-            .panel {
-                padding: 16px;
-                border-radius: 18px;
+            header {
+                align-items: start;
+                flex-direction: column;
+            }
+
+            .dataset-note {
+                text-align: left;
+            }
+
+            h1 {
+                font-size: 2.3rem;
+            }
+
+            .top-grid,
+            .analysis-grid {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0;
+            }
+
+            .chart-section {
+                padding-top: 17px;
             }
         }
     </style>
@@ -236,75 +370,90 @@
 
 <body>
     <main>
-        <section class="hero">
-            <p class="eyebrow">332 Lab 1</p>
-            <h1>Topic: Fused Dataset Visualization</h1>
-            <p class="subtitle">
-                The topic: whey protein sales vs the trend of protein and ways of losing weight.
-            </p>
-            <p class="subtitle">
-                Select any variable from the fused dataset. Categorical variables render as bar charts,
-                and numeric variables render as date-based histograms.
-            </p>
+        <header>
+            <div>
+                <p class="eyebrow">CSE 332 / Lab 2(a)</p>
+                <h1>Signal Atlas</h1>
+                <p class="dek">Explore the structure of six Google Trends measurements with principal components and
+                    k-means.</p>
+            </div>
+            <p class="dataset-note" id="dataset-note">Loading prepared observations...</p>
+        </header>
+
+        <div id="app-error" role="alert"></div>
+
+        <div class="top-grid">
+            <section class="chart-section" aria-labelledby="scree-heading">
+                <div class="section-heading">
+                    <h2 id="scree-heading">Principal component spectrum</h2><span class="muted">Click a bar to set
+                        di</span>
+                </div>
+                <p class="method">Eigenvalues of the standardized feature correlation structure. The initial di is a
+                    geometric elbow heuristic, not a claim that every scree plot has one clear elbow.</p>
+                <div id="scree-chart" class="chart-wrap"></div>
+                <p class="metric-line" id="di-summary"></p>
+            </section>
+            <section class="chart-section" aria-labelledby="elbow-heading">
+                <div class="section-heading">
+                    <h2 id="elbow-heading">K-means elbow</h2><span class="muted">Click a point to set k</span>
+                </div>
+                <p class="method">Error is mean squared Euclidean distance to the assigned centroid: inertia divided by
+                    the number of observations. K-means uses all standardized features.</p>
+                <div id="elbow-chart" class="chart-wrap"></div>
+                <p class="metric-line" id="k-summary"></p>
+            </section>
+        </div>
+
+        <section class="chart-section" aria-labelledby="biplot-heading">
+            <div class="section-heading">
+                <h2 id="biplot-heading">PCA biplot</h2><span class="muted">Hover a point for its date and original
+                    measurements</span>
+            </div>
+            <div class="controls">
+                <div class="control"><label for="x-component">Horizontal component</label><select
+                        id="x-component"></select></div>
+                <div class="control"><label for="y-component">Vertical component</label><select
+                        id="y-component"></select></div>
+            </div>
+            <div id="biplot" class="chart-wrap"></div>
+            <div id="cluster-legend" class="legend" aria-label="Cluster legend"></div>
+            <p class="method">Arrows use each feature's unit-eigenvector coefficients in the selected two components,
+                all multiplied by 3.0 for display. This is a display scaling only.</p>
         </section>
 
-        <section class="panel">
-            <section class="viz-section">
-                <div class="controls">
-                    <div class="control">
-                        <label for="variable-select">Variable</label>
-                        <select id="variable-select"></select>
-                    </div>
-                    <fieldset class="control-group">
-                        <legend>Chart orientation</legend>
-                        <div class="radio-row">
-                            <label class="radio-option" for="orientation-upright">
-                                <input id="orientation-upright" type="radio" name="chart-orientation" value="upright"
-                                    checked />
-                                Upright
-                            </label>
-                            <label class="radio-option" for="orientation-sideways">
-                                <input id="orientation-sideways" type="radio" name="chart-orientation"
-                                    value="sideways" />
-                                Sideway
-                            </label>
-                        </div>
-                    </fieldset>
+        <div class="analysis-grid">
+            <section class="chart-section" aria-labelledby="ranking-heading">
+                <div class="section-heading">
+                    <h2 id="ranking-heading">Feature contribution</h2>
                 </div>
-                <p class="chart-meta" id="chart-meta"></p>
-                <div id="chart"></div>
-                <p class="status" id="status">Loading data...</p>
-            </section>
-
-            <section class="viz-section">
-                <h2 class="viz-title">Scatterplot</h2>
-                <div class="controls">
-                    <fieldset class="control-group">
-                        <legend>Menu variable axis</legend>
-                        <div class="radio-row">
-                            <label class="radio-option" for="scatter-axis-x">
-                                <input id="scatter-axis-x" type="radio" name="scatter-axis-assignment" value="x"
-                                    checked />
-                                Use menu variable on X
-                            </label>
-                            <label class="radio-option" for="scatter-axis-y">
-                                <input id="scatter-axis-y" type="radio" name="scatter-axis-assignment" value="y" />
-                                Use menu variable on Y
-                            </label>
-                        </div>
-                    </fieldset>
-                    <div class="control">
-                        <label for="scatter-variable-select">Second numeric variable</label>
-                        <select id="scatter-variable-select"></select>
-                    </div>
+                <p class="method">Score = sum of squared unit-eigenvector coefficients over PC1 through PCdi. Select
+                    four original features for the matrix.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Attribute</th>
+                                <th>Score</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-body"></tbody>
+                    </table>
                 </div>
-                <p class="chart-meta" id="scatter-meta"></p>
-                <div id="scatterplot"></div>
-                <p class="status" id="scatter-status">Loading scatterplot...</p>
+                <p class="table-note">Changing di recalculates the scores and selects the current top four by default.
+                    Manual selections update the matrix immediately.</p>
             </section>
-        </section>
+            <section class="chart-section" aria-labelledby="matrix-heading">
+                <div class="section-heading">
+                    <h2 id="matrix-heading">Scatterplot matrix</h2><span class="muted">Original measurements · shared
+                        cluster colors</span>
+                </div>
+                <div id="matrix" class="chart-wrap matrix-wrap"></div>
+            </section>
+        </div>
+        <footer id="data-footnote"></footer>
     </main>
-
     <div class="tooltip" id="tooltip"></div>
     <script type="module" src="./index.js"></script>
 </body>

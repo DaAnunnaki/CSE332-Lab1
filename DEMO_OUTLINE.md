@@ -1,0 +1,12 @@
+# Narrated Demo Outline
+
+1. Introduce the fused dataset and identify the six Trends measurements. Explain that Date is the row ID, categorical fields are excluded, the disjoint sales rows lack the selected measurements, and 485 incomplete rows are omitted to retain 273 complete observations.
+2. Show the PCA spectrum. Explain standardization, eigenvalues, the endpoint-chord heuristic, and why initial di=2 is a practical choice rather than a guaranteed clear elbow. Point out 62.9% for PC1 and 82.0% cumulative for PC1-PC2.
+3. Click PC3 in the scree plot. Read the updated di and 92.0% cumulative variance. Show how the ranking scores recalculate and how the four selected original attributes change the scatterplot matrix. Toggle one attribute checkbox to demonstrate manual selection.
+4. Explain the biplot's original attribute arrows, unit-eigenvector coefficients, fixed 3.0 display multiplier, axis explained-variance labels, and point tooltip. Hover a point to show its date ID and original values.
+5. Change one PCA axis to PC4. Show that coordinates, arrows, and axis labels redraw, while k and the cluster assignment model do not change. Mention that the selectors prevent using the same component twice.
+6. Explain the k-means error definition: inertia divided by observation count, or mean squared distance to the assigned centroid. Note seed 0, 20 initializations, and that the elbow is gradual.
+7. Click k=5. Show the highlighted elbow point, updated k summary, five-item legend, and synchronized recoloring in both the biplot and scatterplot matrix. Click another k if useful to show the cluster count changes.
+8. Show the matrix's original-feature axes, diagonal names, consistent feature scales, and matching point colors. Briefly summarize the observed k=3 sizes (116, 45, 112) or the leading di=2 feature scores, without treating arbitrary cluster IDs as semantic labels.
+9. Close with limitations: complete-case selection excludes the sales block, Trends values are relative, and the last supplied timestamp (`2026-10-04`) is future-dated relative to the analysis date and should be checked.
+10. Remind the audience that this outline is for the voice-narrated recording; the video itself must be recorded and submitted separately on Brightspace.
