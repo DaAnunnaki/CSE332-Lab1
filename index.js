@@ -23,6 +23,7 @@ async function loadResults() {
         setupControls();
         renderScree();
         renderElbow();
+        renderCorrelations();
         renderRanking();
         renderBiplot();
         renderMatrix();
@@ -128,19 +129,18 @@ function renderElbow() {
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     const models = results.kmeans;
-    const x = d3.scaleLinear().domain([1, d3.max(models, (model) => model.k)]).range([0, innerWidth]);
+    const x = d3.scaleBand().domain(models.map((model) => model.k)).range([0, innerWidth]).padding(0.18);
     const y = d3.scaleLinear().domain([0, d3.max(models, (model) => model.mean_squared_distance) * 1.08]).nice().range([innerHeight, 0]);
     const svg = d3.select("#elbow-chart").append("svg").attr("viewBox", `0 0 ${width} ${height}`)
         .attr("role", "img").attr("aria-label", "K-means clustering error by cluster count");
     const plot = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
     plot.append("g").attr("class", "grid").call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(""));
-    plot.append("g").attr("class", "axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(models.length).tickFormat(d3.format("d")));
+    plot.append("g").attr("class", "axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x));
     plot.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".2f")));
-    plot.append("path").datum(models).attr("fill", "none").attr("stroke", "#bc5b32").attr("stroke-width", 2)
-        .attr("d", d3.line().x((model) => x(model.k)).y((model) => y(model.mean_squared_distance)));
-    plot.selectAll("circle").data(models).join("circle")
-        .attr("cx", (model) => x(model.k)).attr("cy", (model) => y(model.mean_squared_distance))
-        .attr("r", (model) => model.k === selectedK ? 7 : 4.5)
+    plot.selectAll("rect").data(models).join("rect")
+        .attr("class", "bar k-bar")
+        .attr("x", (model) => x(model.k)).attr("y", (model) => y(model.mean_squared_distance))
+        .attr("width", x.bandwidth()).attr("height", (model) => innerHeight - y(model.mean_squared_distance))
         .attr("fill", (model) => model.k === selectedK ? "#167b68" : "#bc5b32")
         .attr("tabindex", 0).attr("role", "button")
         .attr("aria-label", (model) => `Select k ${model.k}; mean squared distance ${format(model.mean_squared_distance, 3)}`)
@@ -159,11 +159,49 @@ function renderElbow() {
 function changeK(value) {
     selectedK = value;
     const model = results.kmeans.find((entry) => entry.k === selectedK);
-    d3.select("#elbow-chart circle").attr("r", (entry) => entry.k === selectedK ? 7 : 4.5)
+    d3.selectAll("#elbow-chart .k-bar")
         .attr("fill", (entry) => entry.k === selectedK ? "#167b68" : "#bc5b32");
     updateKSummary(model);
     renderBiplot();
     renderMatrix();
+}
+
+function renderCorrelations() {
+    const values = results.sales_search_correlations;
+    const width = 1050;
+    const height = 290;
+    const margin = { top: 12, right: 34, bottom: 44, left: 132 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    const x = d3.scaleLinear().domain([-1, 1]).range([0, innerWidth]);
+    const y = d3.scaleBand().domain(values.map((entry) => entry.feature)).range([0, innerHeight]).padding(0.24);
+    const svg = d3.select("#correlation-chart").append("svg").attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("role", "img").attr("aria-label", "Pearson correlation between Units Sold and Google Trends search features");
+    const plot = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    plot.append("g").attr("class", "grid").attr("transform", `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(x).tickValues([-1, -0.5, 0, 0.5, 1]).tickSize(-innerHeight).tickFormat(""));
+    plot.append("line").attr("x1", x(0)).attr("x2", x(0)).attr("y1", 0).attr("y2", innerHeight)
+        .attr("stroke", "#66756d").attr("stroke-width", 1.5);
+    plot.append("g").attr("class", "axis").call(d3.axisLeft(y));
+    plot.append("g").attr("class", "axis").attr("transform", `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(x).tickValues([-1, -0.5, 0, 0.5, 1]).tickFormat(d3.format(".1f")));
+    plot.selectAll("rect").data(values).join("rect")
+        .attr("x", (entry) => x(Math.min(0, entry.pearson_r)))
+        .attr("y", (entry) => y(entry.feature))
+        .attr("width", (entry) => Math.abs(x(entry.pearson_r) - x(0)))
+        .attr("height", y.bandwidth())
+        .attr("fill", (entry) => entry.pearson_r >= 0 ? "#167b68" : "#bc5b32")
+        .on("mouseenter", (event, entry) => showTooltip(event, `<strong>${escapeHtml(entry.feature)}</strong><br>Pearson r: ${format(entry.pearson_r, 3)}<br>Spearman rho: ${format(entry.spearman_rho, 3)}<br>n = ${results.rows.length}`))
+        .on("mousemove", moveTooltip).on("mouseleave", hideTooltip);
+    plot.selectAll("text.correlation-value").data(values).join("text")
+        .attr("class", "correlation-value")
+        .attr("x", (entry) => x(entry.pearson_r) + (entry.pearson_r >= 0 ? 6 : -6))
+        .attr("y", (entry) => y(entry.feature) + y.bandwidth() / 2 + 4)
+        .attr("text-anchor", (entry) => entry.pearson_r >= 0 ? "start" : "end")
+        .attr("fill", "#202d2b").attr("font-size", 11).text((entry) => format(entry.pearson_r, 3));
+    svg.append("text").attr("class", "axis-label").attr("x", margin.left + innerWidth / 2).attr("y", height - 8)
+        .attr("text-anchor", "middle").text("Pearson correlation with Units Sold");
+    d3.select("#correlation-summary").html(`Computed from <strong>${results.rows.length} matched rows</strong> (${results.rows[0].id} to ${results.rows.at(-1).id}). Largest positive Pearson association in this set: <strong>${escapeHtml(d3.greatest(values, (entry) => entry.pearson_r).feature)}</strong> (${format(d3.max(values, (entry) => entry.pearson_r), 3)}).`);
 }
 
 function updateKSummary(model = results.kmeans.find((entry) => entry.k === selectedK)) {

@@ -374,8 +374,8 @@
             <div>
                 <p class="eyebrow">CSE 332 / Lab 2(a)</p>
                 <h1>Signal Atlas</h1>
-                <p class="dek">Explore the structure of six Google Trends measurements with principal components and
-                    k-means.</p>
+                <p class="dek">Explore monthly whey protein sales alongside six Google Trends measures with principal
+                    components and k-means.</p>
             </div>
             <p class="dataset-note" id="dataset-note">Loading prepared observations...</p>
         </header>
@@ -395,7 +395,7 @@
             </section>
             <section class="chart-section" aria-labelledby="elbow-heading">
                 <div class="section-heading">
-                    <h2 id="elbow-heading">K-means elbow</h2><span class="muted">Click a point to set k</span>
+                    <h2 id="elbow-heading">K-means elbow</h2><span class="muted">Click a bar to set k</span>
                 </div>
                 <p class="method">Error is mean squared Euclidean distance to the assigned centroid: inertia divided by
                     the number of observations. K-means uses all standardized features.</p>
@@ -403,6 +403,17 @@
                 <p class="metric-line" id="k-summary"></p>
             </section>
         </div>
+
+        <section class="chart-section" aria-labelledby="correlation-heading">
+            <div class="section-heading">
+                <h2 id="correlation-heading">Protein sales vs. search interest</h2><span class="muted">Matched monthly
+                    observations only</span>
+            </div>
+            <p class="method">Pearson correlation between Units Sold and each Google Trends feature across rows with
+                complete numerical data. Correlation describes linear association; it does not establish causation.</p>
+            <div id="correlation-chart" class="chart-wrap"></div>
+            <p class="metric-line" id="correlation-summary"></p>
+        </section>
 
         <section class="chart-section" aria-labelledby="biplot-heading">
             <div class="section-heading">
