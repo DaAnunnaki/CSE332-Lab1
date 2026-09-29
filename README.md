@@ -41,12 +41,3 @@ pnpm dev
 ```
 
 Open `http://localhost:5173`. To regenerate results later, run `.venv/bin/python pca.py` and reload the page. On Windows, use `.venv\\Scripts\\python.exe` in place of `.venv/bin/python`.
-
-## Deliverables
-
-- [REPORT_DRAFT.md](REPORT_DRAFT.md): implementation and data observations.
-- [DEMO_OUTLINE.md](DEMO_OUTLINE.md): narrated walkthrough covering all interactions.
-- [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md): read-aloud narration with explanations of the displayed calculations and results.
-- `Lab2a-submission.zip`: complete source, dataset, generated results, and documentation without dependency folders or virtual environments.
-
-Record the voice-narrated video separately and submit it on Brightspace.
